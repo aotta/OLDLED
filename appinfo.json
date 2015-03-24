@@ -1,7 +1,11 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "action": 0,
+        "date": 2,
+        "screen": 1,
+        "vibrate": 3
+    },
     "capabilities": [
-        "location",
         "configurable"
     ],
     "companyName": "Aotta",

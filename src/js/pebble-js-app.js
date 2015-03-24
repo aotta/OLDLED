@@ -4,20 +4,22 @@
 // change this token for your project
 var setPebbleToken = 'AYX4';
 
-
 Pebble.addEventListener('ready', function(e) {
 });
 Pebble.addEventListener('appmessage', function(e) {
   key = e.payload.action;
+ 
   if (typeof(key) != 'undefined') {
     var settings = localStorage.getItem(setPebbleToken);
     if (typeof(settings) == 'string') {
       try {
         Pebble.sendAppMessage(JSON.parse(settings));
+        console.log('setting: ' + settings);
       } catch (e) {
       }
     }
     var request = new XMLHttpRequest();
+    console.log('Pebble Account Token: ' + Pebble.getAccountToken());
     request.open('GET', 'http://x.SetPebble.com/api/' + setPebbleToken + '/' + Pebble.getAccountToken(), true);
     request.onload = function(e) {
       if (request.readyState == 4)

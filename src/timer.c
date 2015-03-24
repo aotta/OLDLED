@@ -1,18 +1,16 @@
 #include <pebble.h>
 
   // keys for app message and storage
-enum Settings { setting_screen = 1, setting_date, setting_vibrate };
+enum Settings { setting_screen = 0, setting_date, setting_vibrate };
 
 static Window *s_main_window;
 static TextLayer *s_date_layer, *s_time_layer, *s_minutes_layer, *s_sec_layer;
 static Layer *s_line_layer, *s_line_layer2;
 static GFont s_custom_font_60;
 static GFont s_custom_font_12;
-
-
 static InverterLayer *inverter_layer;
     
-  static enum SettingScreen { screen_black = 0, screen_white, screen_count } screen;
+  static enum SettingScreen { screen_white = 0, screen_black, screen_count } screen;
   static enum SettingDate { date_month_day = 0, date_day_month, date_count } date;
   static enum SettingVibrate { vibrate_none = 0, vibrate_hourly, vibrate_count } vibrate;
   static AppSync app;
@@ -69,6 +67,13 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
     s_sec_text = ":";  
     } else {
        s_sec_text  = " ";
+    
+        GRect rect = layer_get_frame(inverter_layer_get_layer(inverter_layer));
+        rect.origin.x = (screen == screen_black) ? 144 : 0;
+        layer_set_frame(inverter_layer_get_layer(inverter_layer), rect);
+
+    
+    
     } 
   text_layer_set_text_alignment(s_sec_layer, GTextAlignmentCenter);
   text_layer_set_text(s_sec_layer, s_sec_text);
@@ -78,9 +83,11 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
 static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, const Tuple* tuple_old, void* context) {
   //  we know these values are uint8 format
   int value = tuple_new->value->uint8;
+
   switch (key) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "app error %lu", key);
     case setting_screen:
-      if ((value >= 0) && (value < screen_count) && (screen != value)) {
+    if ((value >= 0) && (value < screen_count) && (screen != value)) {
         //  update value
         screen = value;
         //  relocate inverter layer
