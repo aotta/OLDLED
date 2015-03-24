@@ -1,14 +1,58 @@
 #include <pebble.h>
 
+  // keys for app message and storage
+#define BATTERY_MODE   1
+#define DATE_MODE      2
+#define BLUETOOTH_MODE 3
+#define GRAPHICS_MODE  4
+#define CONNLOST_MODE  5
+#define REQUEST_CONFIG 100
+
+#define BATTERY_MODE_NEVER    0
+#define BATTERY_MODE_IF_LOW   1
+#define BATTERY_MODE_ALWAYS   2
+#define DATE_MODE_OFF         0
+#define DATE_MODE_FIRST       1
+#define DATE_MODE_EN          1
+#define DATE_MODE_DE          2
+#define DATE_MODE_ES          3
+#define DATE_MODE_FR          4
+#define DATE_MODE_IT          5
+#define DATE_MODE_SE          6
+#define DATE_MODE_LAST        6
+#define BLUETOOTH_MODE_NEVER  0
+#define BLUETOOTH_MODE_IFOFF  1
+#define BLUETOOTH_MODE_ALWAYS 2
+#define GRAPHICS_MODE_NORMAL  0
+#define GRAPHICS_MODE_INVERT  1
+#define CONNLOST_MODE_IGNORE  0
+#define CONNLOST_MODE_WARN    1
+
+static int battery_mode   = BATTERY_MODE_IF_LOW;
+static int date_mode      = DATE_MODE_EN;
+static int bluetooth_mode = BLUETOOTH_MODE_ALWAYS;
+static int graphics_mode  = GRAPHICS_MODE_NORMAL;
+static int connlost_mode  = CONNLOST_MODE_IGNORE;
+static bool has_config = false;
+  
 static Window *s_main_window;
 static TextLayer *s_date_layer, *s_time_layer, *s_minutes_layer, *s_sec_layer;
 static Layer *s_line_layer, *s_line_layer2;
 static GFont s_custom_font_60;
 static GFont s_custom_font_12;
 
+
+static InverterLayer *inverter_layer;
+
 static void line_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+}
+
+
+void handle_inverter() {
+  if (layer_get_hidden(inverter_layer_get_layer(inverter_layer)) != (graphics_mode == GRAPHICS_MODE_NORMAL))
+    layer_set_hidden(inverter_layer_get_layer(inverter_layer), graphics_mode == GRAPHICS_MODE_NORMAL);
 }
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
@@ -126,6 +170,49 @@ static void main_window_unload(Window *window) {
   layer_destroy(s_line_layer2);
 }
 
+void handle_appmessage_receive(DictionaryIterator *received, void *context) {
+  Tuple *tuple = dict_read_first(received);
+  while (tuple) {
+    switch (tuple->key) {
+      case BATTERY_MODE:
+        battery_mode = tuple->value->int32;
+        break;
+      case DATE_MODE:
+        date_mode = tuple->value->int32;
+        break;
+      case BLUETOOTH_MODE:
+        bluetooth_mode = tuple->value->int32;
+        break;
+      case GRAPHICS_MODE:
+        graphics_mode = tuple->value->int32;
+        break;
+      case CONNLOST_MODE:
+        connlost_mode = tuple->value->int32;
+        break;
+    }
+    tuple = dict_read_next(received);
+  }
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received config");
+  has_config = true;
+//  handle_battery(battery_state_service_peek());
+//  handle_bluetooth(bluetooth_connection_service_peek());
+  handle_inverter();
+//  layer_mark_dirty(hands_layer);
+//  layer_mark_dirty(date_layer);
+}
+
+void request_config(void) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Requesting config");
+  Tuplet request_tuple = TupletInteger(REQUEST_CONFIG, 1);
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+  if (!iter) return;
+  dict_write_tuplet(iter, &request_tuple);
+  dict_write_end(iter);
+  app_message_outbox_send();
+}
+
+
 static void init() {
   s_main_window = window_create();
   window_set_background_color(s_main_window, GColorBlack);
@@ -135,6 +222,10 @@ static void init() {
   });
   window_stack_push(s_main_window, true);
 
+  inverter_layer = inverter_layer_create(GRect(0, 0, 144, 168));
+  layer_add_child(window_get_root_layer(s_main_window), inverter_layer_get_layer(inverter_layer));
+
+  
   tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
   
   // Prevent starting blank
@@ -144,9 +235,25 @@ static void init() {
 }
 
 static void deinit() {
+  app_message_deregister_callbacks();
+  battery_state_service_unsubscribe();
+  tick_timer_service_unsubscribe();
+  if (has_config) {
+    persist_write_int(BATTERY_MODE, battery_mode);
+    persist_write_int(DATE_MODE, date_mode);
+    persist_write_int(BLUETOOTH_MODE, bluetooth_mode);
+    persist_write_int(GRAPHICS_MODE, graphics_mode);
+    persist_write_int(CONNLOST_MODE, connlost_mode);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote config");
+  } else {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Did not write config");
+  }
+  
   window_destroy(s_main_window);
 
   tick_timer_service_unsubscribe();
+  inverter_layer_destroy(inverter_layer);
+  
 }
 
 int main() {

@@ -1,6 +1,7 @@
 {
     "appKeys": {},
     "capabilities": [
+        "location",
         "configurable"
     ],
     "companyName": "Aotta",
@@ -9,15 +10,9 @@
     "resources": {
         "media": [
             {
-                "file": "images/Icon_OldLed.png",
-                "menuIcon": true,
-                "name": "IMAGE_ICON_OLDLED",
-                "type": "png"
-            },
-            {
-                "file": "images/OldLed.png",
-                "name": "IMAGE_OLDLED_ICON",
-                "type": "png"
+                "file": "fonts/LCD1.ttf",
+                "name": "FONT_LCD_12",
+                "type": "font"
             },
             {
                 "file": "fonts/Digital.ttf",
@@ -25,9 +20,15 @@
                 "type": "font"
             },
             {
-                "file": "fonts/LCD1.ttf",
-                "name": "FONT_LCD_12",
-                "type": "font"
+                "file": "images/OldLed.png",
+                "name": "IMAGE_OLDLED_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/Icon_OldLed.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON_OLDLED",
+                "type": "png"
             }
         ]
     },
