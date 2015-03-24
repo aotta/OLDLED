@@ -35,6 +35,7 @@ Pebble.addEventListener('appmessage', function(e) {
 Pebble.addEventListener('showConfiguration', function(e) {
   Pebble.openURL('http://x.SetPebble.com/' + setPebbleToken + '/' + Pebble.getAccountToken());
 });
+
 Pebble.addEventListener('webviewclosed', function(e) {
   if ((typeof(e.response) == 'string') && (e.response.length > 0)) {
     try {

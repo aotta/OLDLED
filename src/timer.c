@@ -1,7 +1,7 @@
 #include <pebble.h>
 
   // keys for app message and storage
-enum Settings { setting_screen = 0, setting_date, setting_vibrate };
+enum Settings { setting_screen = 1, setting_date, setting_vibrate };
 
 static Window *s_main_window;
 static TextLayer *s_date_layer, *s_time_layer, *s_minutes_layer, *s_sec_layer;
@@ -9,6 +9,7 @@ static Layer *s_line_layer, *s_line_layer2;
 static GFont s_custom_font_60;
 static GFont s_custom_font_12;
 static InverterLayer *inverter_layer;
+static bool visible;
     
   static enum SettingScreen { screen_white = 0, screen_black, screen_count } screen;
   static enum SettingDate { date_month_day = 0, date_day_month, date_count } date;
@@ -65,18 +66,16 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   // setta i due punti (secondi)
   if (pari == 0) {
     s_sec_text = ":";  
+    visible = -1;
     } else {
-       s_sec_text  = " ";
-    
-        GRect rect = layer_get_frame(inverter_layer_get_layer(inverter_layer));
-        rect.origin.x = (screen == screen_black) ? 144 : 0;
-        layer_set_frame(inverter_layer_get_layer(inverter_layer), rect);
-
-    
-    
+       s_sec_text  = " ";  
+       visible = 0;
     } 
   text_layer_set_text_alignment(s_sec_layer, GTextAlignmentCenter);
   text_layer_set_text(s_sec_layer, s_sec_text);
+ 
+  // set its visibility
+	//layer_set_hidden(inverter_layer_get_layer(inverter_layer), visible);
   
 }
 
@@ -90,10 +89,8 @@ static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, c
     if ((value >= 0) && (value < screen_count) && (screen != value)) {
         //  update value
         screen = value;
-        //  relocate inverter layer
-        GRect rect = layer_get_frame(inverter_layer_get_layer(inverter_layer));
-        rect.origin.x = (screen == screen_black) ? 144 : 0;
-        layer_set_frame(inverter_layer_get_layer(inverter_layer), rect);
+        //  mostra
+        layer_set_hidden(inverter_layer_get_layer(inverter_layer), screen);
       }
       break;
     case setting_date:
@@ -194,8 +191,9 @@ static void init() {
   window_stack_push(s_main_window, true);
 
   //  inverter
-  inverter_layer = inverter_layer_create(GRect((screen == screen_black) ? 144 : 0, 0, 144, 168));
+  inverter_layer = inverter_layer_create(GRect(0, 0, 144, 168));
   layer_add_child(window_get_root_layer(s_main_window), inverter_layer_get_layer(inverter_layer));
+  
   //  app communication
   Tuplet tuples[] = {
     TupletInteger(setting_screen, screen),
