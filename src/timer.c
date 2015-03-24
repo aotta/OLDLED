@@ -1,8 +1,8 @@
-#include "pebble.h"
+#include <pebble.h>
 
 static Window *s_main_window;
-static TextLayer *s_date_layer, *s_time_layer, *s_minutes_layer;
-static Layer *s_line_layer;
+static TextLayer *s_date_layer, *s_time_layer, *s_minutes_layer, *s_sec_layer;
+static Layer *s_line_layer, *s_line_layer2;
 static GFont s_custom_font_60;
 static GFont s_custom_font_12;
 
@@ -14,8 +14,9 @@ static void line_layer_update_callback(Layer *layer, GContext* ctx) {
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Need to be static because they're used by the system later.
   // static char s_time_text[] = "00:00";
-  static char s_hour_text[] = "00:";
+  static char s_hour_text[] = "00";
   static char s_min_text[] = "00";
+  static char *s_sec_text = ":";
   
   static char s_date_text[] = "Xxxxxxxxx 00";
   
@@ -23,35 +24,38 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   strftime(s_date_text, sizeof(s_date_text), "%B %e", tick_time);
   text_layer_set_text(s_date_layer, s_date_text);
     
-    // secondi lampeggianti
+  char *time_format = "%I";
+      
+  strftime(s_hour_text, sizeof(s_hour_text), time_format, tick_time);
+  
+  // Handle lack of non-padded hour format string for twelve hour clock.
+  if (s_hour_text[0] == '0') {
+    memmove(s_hour_text, &s_hour_text[1], sizeof(s_hour_text) - 1);
+  }
+  
+  text_layer_set_text_alignment(s_time_layer, GTextAlignmentRight);
+  text_layer_set_text(s_time_layer, s_hour_text);
+  
+  
+  // setta i minuti
+  strftime(s_min_text, sizeof(s_min_text), "%M", tick_time);
+  text_layer_set_text_alignment(s_minutes_layer, GTextAlignmentLeft);
+  text_layer_set_text(s_minutes_layer, s_min_text);
+  
+  // secondi lampeggianti
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
   int32_t second_c = t->tm_sec;
   int32_t pari= second_c % 2;
   
-  char *time_format;
-  //if (clock_is_24h_style()) {
-  //  time_format = "%R";
-  //} else {
-    if (pari == 0) {
-    time_format = "%I:";  
+  // setta i due punti (secondi)
+  if (pari == 0) {
+    s_sec_text = ":";  
     } else {
-       time_format = "%I ";
+       s_sec_text  = " ";
     } 
-  //}
-    
-  strftime(s_hour_text, sizeof(s_hour_text), time_format, tick_time);
-  
-  // Handle lack of non-padded hour format string for twelve hour clock.
-  if (!clock_is_24h_style() && (s_hour_text[0] == '0')) {
-    memmove(s_hour_text, &s_hour_text[1], sizeof(s_hour_text) - 1);
-  }
-  
-  text_layer_set_text(s_time_layer, s_hour_text);
-  
-  // setta i minuti
-  strftime(s_min_text, sizeof(s_min_text), "%M", tick_time);
-  text_layer_set_text(s_minutes_layer, s_min_text);
+  text_layer_set_text_alignment(s_sec_layer, GTextAlignmentCenter);
+  text_layer_set_text(s_sec_layer, s_sec_text);
   
 }
 
@@ -70,7 +74,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 
   // imposta il layer per l'ora
-  s_time_layer = text_layer_create(GRect(7, 62, 147, 106));
+  s_time_layer = text_layer_create(GRect(1, 54, 66, 110));
   text_layer_set_text_color(s_time_layer, GColorWhite);
  
   text_layer_set_background_color(s_time_layer, GColorClear);
@@ -80,8 +84,16 @@ static void main_window_load(Window *window) {
   text_layer_set_font(s_time_layer, s_custom_font_60);
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
   
+  // imposta il layer per i due punti (secondi)
+  s_sec_layer = text_layer_create(GRect(67, 54, 14, 110));
+  
+  text_layer_set_text_color(s_sec_layer, GColorWhite);
+  text_layer_set_background_color(s_sec_layer, GColorClear);
+  text_layer_set_font(s_sec_layer, s_custom_font_60);
+  layer_add_child(window_layer, text_layer_get_layer(s_sec_layer));
+
   // imposta il layer per i minuti 
-  s_minutes_layer = text_layer_create(GRect(87, 62, 67, 106));
+  s_minutes_layer = text_layer_create(GRect(80, 54, 66, 110));
   
   text_layer_set_text_color(s_minutes_layer, GColorWhite);
   text_layer_set_background_color(s_minutes_layer, GColorClear);
@@ -89,22 +101,29 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_minutes_layer));
 
 
-  // GRect line_frame = GRect(8, 37, 139, 39);
+  // imposta il layer per la linea di separazione alta
   GRect line_frame = GRect(8, 30, 139, 2);
-  
   s_line_layer = layer_create(line_frame);
   layer_set_update_proc(s_line_layer, line_layer_update_callback);
   layer_add_child(window_layer, s_line_layer);
+  
+   // imposta il layer per la linea di separazione bassa
+  GRect line_frame2 = GRect(8, 130, 139, 2);
+  s_line_layer2 = layer_create(line_frame2);
+  layer_set_update_proc(s_line_layer2, line_layer_update_callback);
+  layer_add_child(window_layer, s_line_layer2);
 }
 
 static void main_window_unload(Window *window) {
   text_layer_destroy(s_date_layer);
   text_layer_destroy(s_time_layer);
   text_layer_destroy(s_minutes_layer);
+  text_layer_destroy(s_sec_layer);
   
   fonts_unload_custom_font(s_custom_font_12);
   fonts_unload_custom_font(s_custom_font_60);
   layer_destroy(s_line_layer);
+  layer_destroy(s_line_layer2);
 }
 
 static void init() {

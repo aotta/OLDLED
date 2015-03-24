@@ -9,6 +9,17 @@
     "resources": {
         "media": [
             {
+                "file": "images/Icon_OldLed.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON_OLDLED",
+                "type": "png"
+            },
+            {
+                "file": "images/OldLed.png",
+                "name": "IMAGE_OLDLED_ICON",
+                "type": "png"
+            },
+            {
                 "file": "fonts/Digital.ttf",
                 "name": "FONT_LED_REAL_60",
                 "type": "font"
@@ -17,22 +28,12 @@
                 "file": "fonts/LCD1.ttf",
                 "name": "FONT_LCD_12",
                 "type": "font"
-            },
-            {
-                "file": "images/menu_icon_simplicity.png",
-                "menuIcon": true,
-                "name": "IMAGE_MENU_ICON",
-                "type": "png"
             }
         ]
     },
-    "sdkVersion": "3",
+    "sdkVersion": "2",
     "shortName": "OldLed",
-    "targetPlatforms": [
-        "aplite",
-        "basalt"
-    ],
-    "uuid": "030ee5fc-518b-49e5-b9b2-0700ee92af69",
+    "uuid": "030ee5fc-518b-49e5-b9b2-0700ee926969",
     "versionCode": 3,
     "versionLabel": "3.0",
     "watchapp": {
