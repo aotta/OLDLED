@@ -11,7 +11,7 @@ static GFont s_custom_font_12;
 static InverterLayer *inverter_layer;
 static bool visible;
     
-  static enum SettingScreen { screen_white = 0, screen_black, screen_count } screen;
+  static enum SettingScreen { screen_black = 1, screen_white, screen_count } screen;
   static enum SettingDate { date_month_day = 0, date_day_month, date_count } date;
   static enum SettingVibrate { vibrate_none = 0, vibrate_hourly, vibrate_count } vibrate;
   static AppSync app;
@@ -24,7 +24,7 @@ static void line_layer_update_callback(Layer *layer, GContext* ctx) {
 }
 
 static void app_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void* context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "app error %d", app_message_error);
+//  APP_LOG(APP_LOG_LEVEL_DEBUG, "app error %d", app_message_error);
 }
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
@@ -84,16 +84,19 @@ static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, c
   int value = tuple_new->value->uint8;
 
   switch (key) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "app error %lu", key);
     case setting_screen:
-    if ((value >= 0) && (value < screen_count) && (screen != value)) {
-        //  update value
-        screen = value;
-        //  mostra
-        layer_set_hidden(inverter_layer_get_layer(inverter_layer), screen);
-      }
+      
+    //if ((value >= 0) && (value < screen_count) && (screen != value)) {
+    if (value == 0) {
+  
+      layer_set_hidden(inverter_layer_get_layer(inverter_layer), true);
+    } else {
+      layer_set_hidden(inverter_layer_get_layer(inverter_layer), false);       
+          }       
+   //   APP_LOG(APP_LOG_LEVEL_DEBUG, "valore: %i", value);
       break;
-    case setting_date:
+    
+   /*  case setting_date:
       if ((value >= 0) && (value < date_count) && (date != value)) {
         //  update value
         date = value;
@@ -106,6 +109,7 @@ static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, c
         //  update value
         vibrate = value;
       break;
+    */
   }
 }
 
@@ -191,6 +195,7 @@ static void init() {
   window_stack_push(s_main_window, true);
 
   //  inverter
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "adesso inverto!");
   inverter_layer = inverter_layer_create(GRect(0, 0, 144, 168));
   layer_add_child(window_get_root_layer(s_main_window), inverter_layer_get_layer(inverter_layer));
   
@@ -200,11 +205,13 @@ static void init() {
     TupletInteger(setting_date, date),
     TupletInteger(setting_vibrate, vibrate)
   };
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "app message.....");
   app_message_open(160, 160);
   app_sync_init(&app, buffer, sizeof(buffer), tuples, ARRAY_LENGTH(tuples),
                 tuple_changed_callback, app_error_callback, NULL);
   //  display time (immediately before first tick event)
-  handle_second_tick(NULL,0);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "handle tick...");
+  //handle_second_tick(NULL,0);
   
   //  tick service
     tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);

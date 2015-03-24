@@ -38,9 +38,9 @@
     },
     "sdkVersion": "2",
     "shortName": "OldLed",
-    "uuid": "030ee5fc-518b-49e5-b9b2-0700ee926969",
+    "uuid": "030ee5fc-518b-49e5-b9b2-0700ee92af69",
     "versionCode": 3,
-    "versionLabel": "3.0",
+    "versionLabel": "0.1",
     "watchapp": {
         "watchface": true
     }
