@@ -10,14 +10,10 @@
     "resources": {
         "media": [
             {
-                "file": "fonts/LCD1.ttf",
-                "name": "FONT_LCD_12",
-                "type": "font"
-            },
-            {
-                "file": "fonts/Digital.ttf",
-                "name": "FONT_LED_REAL_60",
-                "type": "font"
+                "file": "images/Icon_OldLed.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON_OLDLED",
+                "type": "png"
             },
             {
                 "file": "images/OldLed.png",
@@ -25,10 +21,14 @@
                 "type": "png"
             },
             {
-                "file": "images/Icon_OldLed.png",
-                "menuIcon": true,
-                "name": "IMAGE_ICON_OLDLED",
-                "type": "png"
+                "file": "fonts/Digital.ttf",
+                "name": "FONT_LED_REAL_60",
+                "type": "font"
+            },
+            {
+                "file": "fonts/LCD1.ttf",
+                "name": "FONT_LCD_12",
+                "type": "font"
             }
         ]
     },
