@@ -11,7 +11,7 @@ static GFont s_custom_font_12;
 static InverterLayer *inverter_layer;
 static bool visible;
     
-  static enum SettingScreen { screen_black = 1, screen_white, screen_count } screen;
+  static enum SettingScreen { screen_black = 0, screen_white, screen_count } screen;
   static enum SettingDate { date_month_day = 0, date_day_month, date_count } date;
   static enum SettingVibrate { vibrate_none = 0, vibrate_hourly, vibrate_count } vibrate;
   static AppSync app;
@@ -35,7 +35,7 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   static char *s_sec_text = ":";
  
   static char s_date_text[] = "Xxxxxxxxx 00";
-
+  
   if (date == 0) {
     strftime(s_date_text, sizeof(s_date_text), "%B %e", tick_time);
   } else {
@@ -43,13 +43,20 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   
   text_layer_set_text(s_date_layer, s_date_text);
     
-  char *time_format = "%I";
-      
+  char *time_format;
+
+   if (clock_is_24h_style()) {
+    time_format = "%R";
+  } else {
+    time_format = "%I";
+  }
+  
   strftime(s_hour_text, sizeof(s_hour_text), time_format, tick_time);
   
+  
   // Handle lack of non-padded hour format string for twelve hour clock.
-  if (s_hour_text[0] == '0') {
-    memmove(s_hour_text, &s_hour_text[1], sizeof(s_hour_text) - 1);
+  if (!clock_is_24h_style() && (s_hour_text[0] == '0')) {
+      memmove(s_hour_text, &s_hour_text[1], sizeof(s_hour_text) - 1);
   }
   
   text_layer_set_text_alignment(s_time_layer, GTextAlignmentRight);
@@ -78,9 +85,12 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   text_layer_set_text_alignment(s_sec_layer, GTextAlignmentCenter);
   text_layer_set_text(s_sec_layer, s_sec_text);
  
-  // set its visibility
-	//layer_set_hidden(inverter_layer_get_layer(inverter_layer), visible);
-  
+//  check for hourly vibration notification
+
+ 
+  if ((vibrate == vibrate_hourly) && (units_changed & HOUR_UNIT))
+//    APP_LOG(APP_LOG_LEVEL_DEBUG, "Vibrate: %i", vibrate);
+    vibes_short_pulse();  
 }
 
 static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, const Tuple* tuple_old, void* context) {
@@ -90,12 +100,10 @@ static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, c
   switch (key) {
     case setting_screen:
       
-    //if ((value >= 0) && (value < screen_count) && (screen != value)) {
-    if (value == 0) {
-  
-      layer_set_hidden(inverter_layer_get_layer(inverter_layer), true);
-    } else {
-      layer_set_hidden(inverter_layer_get_layer(inverter_layer), false);       
+    if ((value >= 0) && (value < screen_count) && (screen != value)) {
+       //  update value
+        screen = value;
+        layer_set_hidden(inverter_layer_get_layer(inverter_layer), (screen == screen_black));
           }       
    //   APP_LOG(APP_LOG_LEVEL_DEBUG, "valore: %i", value);
       break;
@@ -133,7 +141,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_date_layer));
 
   // imposta il layer per l'ora
-  s_time_layer = text_layer_create(GRect(1, 54, 66, 110));
+  s_time_layer = text_layer_create(GRect(1, 54, 64, 110));
   text_layer_set_text_color(s_time_layer, GColorWhite);
  
   text_layer_set_background_color(s_time_layer, GColorClear);
@@ -144,7 +152,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
   
   // imposta il layer per i due punti (secondi)
-  s_sec_layer = text_layer_create(GRect(67, 54, 14, 110));
+  s_sec_layer = text_layer_create(GRect(65, 54, 14, 110));
   
   text_layer_set_text_color(s_sec_layer, GColorWhite);
   text_layer_set_background_color(s_sec_layer, GColorClear);
@@ -152,7 +160,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_sec_layer));
 
   // imposta il layer per i minuti 
-  s_minutes_layer = text_layer_create(GRect(80, 54, 66, 110));
+  s_minutes_layer = text_layer_create(GRect(80, 54, 64, 110));
   
   text_layer_set_text_color(s_minutes_layer, GColorWhite);
   text_layer_set_background_color(s_minutes_layer, GColorClear);
@@ -186,6 +194,9 @@ static void main_window_unload(Window *window) {
 }
 
 static void init() {
+  
+  // default setting
+  
   screen = screen_black;
   date = date_month_day;
   vibrate = vibrate_none;
@@ -199,7 +210,6 @@ static void init() {
   window_stack_push(s_main_window, true);
 
   //  inverter
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "adesso inverto!");
   inverter_layer = inverter_layer_create(GRect(0, 0, 144, 168));
   layer_add_child(window_get_root_layer(s_main_window), inverter_layer_get_layer(inverter_layer));
   
@@ -213,8 +223,8 @@ static void init() {
   app_message_open(160, 160);
   app_sync_init(&app, buffer, sizeof(buffer), tuples, ARRAY_LENGTH(tuples),
                 tuple_changed_callback, app_error_callback, NULL);
+  
   //  display time (immediately before first tick event)
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "handle tick...");
   //handle_second_tick(NULL,0);
   
   //  tick service
