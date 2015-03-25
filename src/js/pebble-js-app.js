@@ -2,7 +2,7 @@
 //  auth: Matthew Clark, SetPebble
 
 // change this token for your project
-var setPebbleToken = 'AYX4';
+var setPebbleToken = 'URJQ';
 
 Pebble.addEventListener('ready', function(e) {
  // console.log('Pronto!');

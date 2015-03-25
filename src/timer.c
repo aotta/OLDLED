@@ -36,7 +36,11 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
  
   static char s_date_text[] = "Xxxxxxxxx 00";
 
-  strftime(s_date_text, sizeof(s_date_text), "%B %e", tick_time);
+  if (date == 0) {
+    strftime(s_date_text, sizeof(s_date_text), "%B %e", tick_time);
+  } else {
+    strftime(s_date_text, sizeof(s_date_text), "%e %B", tick_time);}
+  
   text_layer_set_text(s_date_layer, s_date_text);
     
   char *time_format = "%I";
@@ -96,12 +100,12 @@ static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, c
    //   APP_LOG(APP_LOG_LEVEL_DEBUG, "valore: %i", value);
       break;
     
-   /*  case setting_date:
+     case setting_date:
       if ((value >= 0) && (value < date_count) && (date != value)) {
         //  update value
         date = value;
         //  redraw date
-        handle_second_tick(NULL,0);
+        //handle_second_tick(NULL,0);
       }
       break;
     case setting_vibrate:
@@ -109,7 +113,7 @@ static void tuple_changed_callback(const uint32_t key, const Tuple* tuple_new, c
         //  update value
         vibrate = value;
       break;
-    */
+    
   }
 }
 
@@ -157,13 +161,13 @@ static void main_window_load(Window *window) {
 
 
   // imposta il layer per la linea di separazione alta
-  GRect line_frame = GRect(8, 30, 139, 2);
+  GRect line_frame = GRect(8, 30, 130, 2);
   s_line_layer = layer_create(line_frame);
   layer_set_update_proc(s_line_layer, line_layer_update_callback);
   layer_add_child(window_layer, s_line_layer);
   
    // imposta il layer per la linea di separazione bassa
-  GRect line_frame2 = GRect(8, 130, 139, 2);
+  GRect line_frame2 = GRect(8, 136, 130, 2);
   s_line_layer2 = layer_create(line_frame2);
   layer_set_update_proc(s_line_layer2, line_layer_update_callback);
   layer_add_child(window_layer, s_line_layer2);
