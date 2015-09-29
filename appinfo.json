@@ -1,7 +1,11 @@
 {
     "appKeys": {
         "action": 0,
+        "battery": 4,
         "date": 2,
+        "ledcolorB": 7,
+        "ledcolorF": 6,
+        "riserva": 5,
         "screen": 1,
         "vibrate": 3
     },
@@ -14,14 +18,17 @@
     "resources": {
         "media": [
             {
-                "file": "images/Icon_OldLed.png",
-                "menuIcon": true,
-                "name": "IMAGE_ICON_OLDLED",
+                "file": "images/download.png",
+                "name": "IMAGE_OLDLED_ICON",
                 "type": "png"
             },
             {
-                "file": "images/OldLed.png",
-                "name": "IMAGE_OLDLED_ICON",
+                "file": "images/oldledcol28.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON_OLDLED",
+                "targetPlatforms": [
+                    "basalt"
+                ],
                 "type": "png"
             },
             {
@@ -36,11 +43,13 @@
             }
         ]
     },
-    "sdkVersion": "2",
-    "shortName": "OldLed",
-    "uuid": "030ee5fc-518b-49e5-b9b2-0700ee92af69",
-    "versionCode": 3,
-    "versionLabel": "0.2",
+    "sdkVersion": "3",
+    "shortName": "OldLedColor",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "fa81e370-396c-44d8-957f-f8ff14c5c4b9",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": true
     }
